@@ -24,14 +24,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.android.cards.internal.Card;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
 
 /**
  * Base Abstract Card  model
  *
  * @author Gabriele Mariotti (gabri.mariotti@gmail.com)
  */
-public abstract class BaseCard implements CardUIInterface {
+public abstract class BaseCard implements CardUIInferface {
 
     /**
      * Context
@@ -46,7 +46,7 @@ public abstract class BaseCard implements CardUIInterface {
     /**
      * Outer View
      */
-    protected CardView mCardView;
+    protected CardViewWrapper mCardView;
 
     /**
      * Inner View
@@ -92,7 +92,7 @@ public abstract class BaseCard implements CardUIInterface {
      * @return the complete View component
      */
 
-    public CardView getCardView() {
+    public CardViewWrapper getCardView() {
         return mCardView;
     }
 
@@ -170,10 +170,10 @@ public abstract class BaseCard implements CardUIInterface {
     }
 
     /**
-     * Set the linked {@link CardView}
-     * @param cardView {@link CardView}
+     * Set the linked {@link com.android.cards.view.base.CardViewWrapper}
+     * @param cardView {@link com.android.cards.view.base.CardViewWrapper}
      */
-    public void setCardView(CardView cardView) {
+    public void setCardView(CardViewWrapper cardView) {
         mCardView = cardView;
     }
 

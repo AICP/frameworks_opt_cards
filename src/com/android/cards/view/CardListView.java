@@ -36,6 +36,7 @@ import com.android.cards.R;
 import com.android.cards.internal.Card;
 import com.android.cards.internal.CardArrayAdapter;
 import com.android.cards.internal.CardCursorAdapter;
+import com.android.cards.view.base.CardViewWrapper;
 import com.android.cards.view.listener.SwipeOnScrollListener;
 
 /**
@@ -63,7 +64,7 @@ import com.android.cards.view.listener.SwipeOnScrollListener;
  * </p>
  * @author Gabriele Mariotti (gabri.mariotti@gmail.com)
  */
-public class CardListView extends ListView implements CardView.OnExpandListAnimatorListener {
+public class CardListView extends ListView implements CardViewWrapper.OnExpandListAnimatorListener {
 
     protected static String TAG = "CardListView";
 
@@ -279,7 +280,7 @@ public class CardListView extends ListView implements CardView.OnExpandListAnima
     //--------------------------------------------------------------------------
 
     @Override
-    public void onExpandStart(CardView viewCard,View expandingLayout) {
+    public void onExpandStart(CardViewWrapper viewCard,View expandingLayout) {
 
         boolean expandable = true;
         if (mCursorAdapter!=null){
@@ -296,7 +297,7 @@ public class CardListView extends ListView implements CardView.OnExpandListAnima
     }
 
     @Override
-    public void onCollapseStart(CardView viewCard,View expandingLayout) {
+    public void onCollapseStart(CardViewWrapper viewCard,View expandingLayout) {
         boolean collapsible = true;
         if (mCursorAdapter!=null){
             collapsible = mCursorAdapter.onCollapseStart(viewCard);
@@ -322,8 +323,7 @@ public class CardListView extends ListView implements CardView.OnExpandListAnima
          * @param cardView         cardView
          * @param listView         listView
          */
-        public static void animateCollapsing(final View expandingLayout,
-                final CardView cardView,final AbsListView listView) {
+        public static void animateCollapsing(final View expandingLayout, final CardViewWrapper cardView,final AbsListView listView) {
             int origHeight = expandingLayout.getHeight();
 
             ValueAnimator animator = createHeightAnimator(expandingLayout, origHeight, 0);
@@ -352,19 +352,16 @@ public class CardListView extends ListView implements CardView.OnExpandListAnima
          * @param cardView         cardView
          * @param listView         listView
          */
-        public static void animateExpanding(final View expandingLayout,
-                final CardView cardView,final AbsListView listView) {
+        public static void animateExpanding(final View expandingLayout, final CardViewWrapper cardView,final AbsListView listView) {
             /* Update the layout so the extra content becomes visible.*/
             expandingLayout.setVisibility(View.VISIBLE);
 
             View parent = (View) expandingLayout.getParent();
-            final int widthSpec = View.MeasureSpec.makeMeasureSpec(parent.getMeasuredWidth()
-                    - parent.getPaddingLeft() - parent.getPaddingRight(), View.MeasureSpec.AT_MOST);
+            final int widthSpec = View.MeasureSpec.makeMeasureSpec(parent.getMeasuredWidth() - parent.getPaddingLeft() - parent.getPaddingRight(), View.MeasureSpec.AT_MOST);
             final int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             expandingLayout.measure(widthSpec, heightSpec);
 
-            ValueAnimator animator =
-                    createHeightAnimator(expandingLayout, 0, expandingLayout.getMeasuredHeight());
+            ValueAnimator animator = createHeightAnimator(expandingLayout, 0, expandingLayout.getMeasuredHeight());
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                 final int listViewHeight = listView.getHeight();
                 final int listViewBottomPadding = listView.getPaddingBottom();
@@ -376,8 +373,7 @@ public class CardListView extends ListView implements CardView.OnExpandListAnima
                     if (bottom > listViewHeight) {
                         final int top = v.getTop();
                         if (top > 0) {
-                            listView.smoothScrollBy(Math.min(
-                                    bottom - listViewHeight + listViewBottomPadding, top), 0);
+                            listView.smoothScrollBy(Math.min(bottom - listViewHeight + listViewBottomPadding, top), 0);
                         }
                     }
                 }
@@ -409,8 +405,7 @@ public class CardListView extends ListView implements CardView.OnExpandListAnima
             return result;
         }
 
-        public static ValueAnimator createHeightAnimator(
-                final View view, final int start, final int end) {
+        public static ValueAnimator createHeightAnimator(final View view, final int start, final int end) {
             ValueAnimator animator = ValueAnimator.ofInt(start, end);
             animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 

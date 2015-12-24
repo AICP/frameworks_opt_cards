@@ -37,7 +37,7 @@ import java.util.ArrayList;
 
 import com.android.cards.R;
 import com.android.cards.internal.Card;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
 
 public class MultiChoiceAdapterHelperBase implements AdapterView.OnItemLongClickListener,AdapterView.OnItemClickListener {
 
@@ -84,14 +84,14 @@ public class MultiChoiceAdapterHelperBase implements AdapterView.OnItemLongClick
      * @param mCardView
      * @param position
      */
-    public void setupMultichoice(View view, Card mCard, CardView mCardView, long position) {
+    public void setupMultichoice(View view, Card mCard, CardViewWrapper mCardView, long position) {
         final MultiChoiceAdapter adapter = (MultiChoiceAdapter) owner;
 
 
         View.OnClickListener advanceClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final CardView cardView = (CardView) v;
+                final CardViewWrapper cardView = (CardViewWrapper) v;
                 int position = adapter.getPosition(cardView.getCard());
                 onItemClick(mAdapterView, v, position, adapter.getItemId(position));
             }

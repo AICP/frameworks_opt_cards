@@ -21,9 +21,10 @@ package com.android.cards.internal.dismissanimation;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.view.View;
 
 import com.android.cards.internal.Card;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
 
 /**
  * @author Gabriele Mariotti (gabri.mariotti@gmail.com)
@@ -42,16 +43,16 @@ public class SwipeDismissAnimation extends BaseDismissAnimation {
     }
 
     @Override
-    public void animate(final Card card, final CardView cardView) {
+    public void animate(final Card card, final CardViewWrapper cardView) {
 
-        cardView.animate()
+        ((View)cardView).animate()
                 .translationX(mDismissRight ? mListWidth : -mListWidth)
                 .alpha(0)
                 .setDuration(mAnimationTime)
                 .setListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        invokeCallbak(cardView);
+                        invokeCallbak((View)cardView);
                     }
                 });
     }

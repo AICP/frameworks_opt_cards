@@ -19,11 +19,13 @@
 
 package com.android.cards.view;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.widget.LinearLayout;
@@ -218,6 +220,18 @@ public class ForegroundLinearLayout extends LinearLayout {
             }
 
             foreground.draw(canvas);
+        }
+    }
+
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public void drawableHotspotChanged(float x, float y) {
+        super.drawableHotspotChanged(x, y);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (mForeground != null) {
+                mForeground.setHotspot(x, y);
+            }
         }
     }
 }

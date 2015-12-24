@@ -26,7 +26,7 @@ import java.util.List;
 
 import com.android.cards.R;
 import com.android.cards.internal.Card;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
 import com.android.cards.view.listener.UndoBarController;
 
 /**
@@ -101,7 +101,7 @@ public abstract class BaseCardArrayAdapter extends ArrayAdapter<Card> {
      * @param mCard
      * @param mCardView
      */
-    protected void setupMultichoice(View view,Card mCard,CardView mCardView,long position){
+    protected void setupMultichoice(View view,Card mCard,CardViewWrapper mCardView,long position){
         //empty
     }
 

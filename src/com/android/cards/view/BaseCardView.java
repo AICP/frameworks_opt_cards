@@ -32,6 +32,8 @@ import com.android.cards.view.base.CardViewInterface;
 import com.android.cards.view.component.CardHeaderView;
 import com.android.cards.view.component.CardShadowView;
 import com.android.cards.view.component.CardThumbnailView;
+import com.android.cards.view.helper.CardViewHelper;
+import com.android.cards.view.helper.CardViewHelperUtil;
 
 /**
  * BaseView for Card
@@ -87,23 +89,25 @@ public class BaseCardView extends LinearLayout implements CardViewInterface {
      */
     protected boolean mForceReplaceInnerLayout =false;
 
+    protected CardViewHelper mHelperImpl;
+
     //--------------------------------------------------------------------------
     // Constructor
     //--------------------------------------------------------------------------
 
     public BaseCardView(Context context) {
-        super(context);
-        init(null, 0);
+        this(context, null, 0);
     }
 
     public BaseCardView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(attrs, 0);
+       this(context, attrs, 0);
     }
 
     public BaseCardView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(attrs, defStyle);
+
+        mHelperImpl = CardViewHelperUtil.getInstance(context);
     }
 
     //--------------------------------------------------------------------------

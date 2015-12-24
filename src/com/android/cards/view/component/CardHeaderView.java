@@ -21,7 +21,6 @@ package com.android.cards.view.component;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.os.Build;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -35,6 +34,8 @@ import android.widget.PopupMenu;
 import com.android.cards.R;
 import com.android.cards.internal.CardHeader;
 import com.android.cards.view.base.CardViewInterface;
+import com.android.cards.view.helper.CardViewHelper;
+import com.android.cards.view.helper.CardViewHelperUtil;
 
 /**
  * Compound View for Header Component.
@@ -123,7 +124,7 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
     /**
      * Listener invoked when expand/collapse button is clicked
      */
-    protected OnClickListener mOnClickExpandCollapseActionListener;
+    //protected OnClickListener mOnClickExpandCollapseActionListener;
 
     /**
      * Used to recycle ui elements.
@@ -140,23 +141,25 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
      */
     protected PopupMenu mPopupMenu;
 
+    protected CardViewHelper mHelperImpl;
+
     //--------------------------------------------------------------------------
     // Constructors
     //--------------------------------------------------------------------------
 
     public CardHeaderView(Context context) {
-        super(context);
-        init(null, 0);
+       this(context, null, 0);
     }
 
     public CardHeaderView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(attrs, 0);
+        this(context, attrs, 0);
     }
 
     public CardHeaderView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(attrs, defStyle);
+
+        mHelperImpl = CardViewHelperUtil.getInstance(context);
     }
 
     //--------------------------------------------------------------------------
@@ -259,12 +262,11 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
         if (mCardHeader.isButtonOverflowVisible()) {
             visibilityButtonHelper(VISIBLE, GONE, GONE);
 
-            if (mCardHeader.getPopupMenu() != CardHeader.NO_POPUP_MENU) {
-                //Add popup
-                addPopup();
-            } else if (mCardHeader.getCustomOverflowAnimation() != null) {
+            addPopup();
+            if (mPopupMenu==null && mCardHeader.getCustomOverflowAnimation() != null) {
                 addCustomOverflowAnimation();
             }
+
         } else {
 
             if (mCardHeader.isButtonExpandVisible()) {
@@ -276,11 +278,7 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
                     //Check if button is not null
                     if (mImageButtonOther != null) {
                         if (mCardHeader.getOtherButtonDrawable() > 0) {
-                            if (Build.VERSION.SDK_INT >= 16) {
-                                mImageButtonOther.setBackground(getResources().getDrawable(mCardHeader.getOtherButtonDrawable()));
-                            } else {
-                                mImageButtonOther.setBackgroundDrawable(getResources().getDrawable(mCardHeader.getOtherButtonDrawable()));
-                            }
+                            mHelperImpl.setButtonBackground(mImageButtonOther, mCardHeader.getOtherButtonDrawable() );
                         }
                         addOtherListener();
                     }
@@ -370,16 +368,19 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
     protected void visibilityButtonHelper(int overflowButtonVisibility, int expandButtonVisibility, int otherButtonVisibility) {
 
         if (overflowButtonVisibility == VISIBLE || overflowButtonVisibility == GONE) {
-            if (mImageButtonOverflow != null)
+            if (mImageButtonOverflow != null) {
                 mImageButtonOverflow.setVisibility(overflowButtonVisibility);
+            }
         }
         if (expandButtonVisibility == VISIBLE || expandButtonVisibility == GONE) {
-            if (mImageButtonExpand != null)
+            if (mImageButtonExpand != null) {
                 mImageButtonExpand.setVisibility(expandButtonVisibility);
+            }
         }
         if (otherButtonVisibility == VISIBLE || otherButtonVisibility == GONE) {
-            if (mImageButtonOther != null)
+            if (mImageButtonOther != null) {
                 mImageButtonOther.setVisibility(otherButtonVisibility);
+            }
         }
     }
 
@@ -391,10 +392,10 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
         //To prevent recycle
         mPopupMenu = null;
 
-        if (mCardHeader.getPopupMenu() > -1 && mImageButtonOverflow != null) {
+        if (mImageButtonOverflow != null) {
 
             // allow dynamic customization on popup menu
-            boolean prepareMenu = true;
+            boolean prepareMenu = mCardHeader.getPopupMenu() > CardHeader.NO_POPUP_MENU ? true : false;
             if (mCardHeader.getPopupMenuPrepareListener() != null) {
 
                 //Build the popupMenu
@@ -418,8 +419,10 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
                             //PopupMenu is built inside onClick() method to avoid building the menu when it is not necessary
                             mPopupMenu = _buildPopupMenu();
                         }
-                        if (mPopupMenu!=null)
+                        if (mPopupMenu!=null) {
                             mPopupMenu.show();
+                            mImageButtonOverflow.setSelected(true);
+                        }
                     }
                 });
             } else {
@@ -442,18 +445,29 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
     private PopupMenu _buildPopupMenu(){
 
         PopupMenu popup = new PopupMenu(getContext(), mImageButtonOverflow);
-        MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(mCardHeader.getPopupMenu(), popup.getMenu());
+        if (mCardHeader.getPopupMenu()> CardHeader.NO_POPUP_MENU){
+            MenuInflater inflater = popup.getMenuInflater();
+            inflater.inflate(mCardHeader.getPopupMenu(), popup.getMenu());
+        }
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                if (mCardHeader.getPopupMenu() > 0 && mCardHeader.getPopupMenuListener() != null) {
+                if (mCardHeader.getPopupMenuListener() != null) {
                     // This individual card has it unique menu
                     mCardHeader.getPopupMenuListener().onMenuItemClick(mCardHeader.getParentCard(), item);
                 }
                 return false;
             }
         });
+
+        popup.setOnDismissListener(new PopupMenu.OnDismissListener() {
+            @Override
+            public void onDismiss(PopupMenu menu) {
+                if (mImageButtonOverflow != null)
+                    mImageButtonOverflow.setSelected(false);
+            }
+        });
+
 
         return popup;
     }
@@ -465,23 +479,23 @@ public class CardHeaderView extends FrameLayout implements CardViewInterface {
     /**
      * Returns Listener invoked when expand/collpse button is clicked
      *
+     * @deprecated
      * @return listener
      */
-    public OnClickListener getOnClickExpandCollapseActionListener() {
+    /*public OnClickListener getOnClickExpandCollapseActionListener() {
         return mOnClickExpandCollapseActionListener;
-    }
+    }*/
 
     /**
      * Attaches Listener to expand/collapse button
      *
+     * @deprecated
      * @param onClickExpandCollapseActionListener listener
      */
-    public void setOnClickExpandCollapseActionListener(OnClickListener onClickExpandCollapseActionListener) {
+    /*public void setOnClickExpandCollapseActionListener(OnClickListener onClickExpandCollapseActionListener) {
         this.mOnClickExpandCollapseActionListener = onClickExpandCollapseActionListener;
-        /*if (mImageButtonExpand != null)
-            mImageButtonExpand.setOnClickListener(onClickExpandCollapseActionListener);
-            */
-    }
+
+    }*/
 
     /**
      * Indicates if view can recycle ui elements.

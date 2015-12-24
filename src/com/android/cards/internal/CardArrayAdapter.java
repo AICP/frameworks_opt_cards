@@ -29,17 +29,22 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.ListView;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
 import com.android.cards.R;
 import com.android.cards.internal.base.BaseCardArrayAdapter;
 import com.android.cards.view.CardListView;
+import com.android.cards.view.base.CardViewWrapper;
 import com.android.cards.view.CardView;
 import com.android.cards.view.listener.SwipeDismissListViewTouchListener;
 import com.android.cards.view.listener.SwipeOnScrollListener;
 import com.android.cards.view.listener.UndoBarController;
 import com.android.cards.view.listener.UndoCard;
+import com.android.cards.view.listener.dismiss.DefaultDismissableManager;
+import com.android.cards.view.listener.dismiss.Dismissable;
 
 /**
  * Array Adapter for {@link Card} model
@@ -103,6 +108,10 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
      */
     protected HashMap<String /* id */,Card>  mInternalObjects;
 
+    /**
+     * Dismissable Manager
+     */
+    protected Dismissable mDismissable;
 
     // -------------------------------------------------------------
     // Constructors
@@ -126,100 +135,97 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
     public View getView(int position, View convertView, ViewGroup parent) {
 
         View view = convertView;
-        ViewHolder holder;
+        CardViewWrapper mCardView;
+        Card mCard;
 
-        // Retrieve card from items
-        Card card = (Card) getItem(position);
-        if (card != null) {
+        LayoutInflater mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        //Retrieve card from items
+        mCard = (Card) getItem(position);
+        if (mCard != null) {
+
             int layout = mRowLayoutId;
             boolean recycle = false;
 
-            // Inflate layout
+            //Inflate layout
             if (view == null) {
                 recycle = false;
-                LayoutInflater inflater =
-                        (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                view = inflater.inflate(layout, parent, false);
-
-                holder = new ViewHolder();
-                holder.cardView = (CardView) view.findViewById(R.id.list_cardId);
-                view.setTag(holder);
+                view = mInflater.inflate(layout, parent, false);
             } else {
                 recycle = true;
-                holder = (ViewHolder) view.getTag();
             }
 
-            // Setup card
-            CardView cardView = holder.cardView;
-            if (cardView != null) {
-                // It is important to set recycle value for inner layout elements
-                cardView.setForceReplaceInnerLayout(
-                        Card.equalsInnerLayout(cardView.getCard(), card));
+            //Setup card
+            mCardView = (CardViewWrapper) view.findViewById(R.id.list_cardId);
+            if (mCardView != null) {
+                //It is important to set recycle value for inner layout elements
+                mCardView.setForceReplaceInnerLayout(Card.equalsInnerLayout(mCardView.getCard(),mCard));
 
-                // It is important to set recycle value for performance issue
-                cardView.setRecycle(recycle);
+                //It is important to set recycle value for performance issue
+                mCardView.setRecycle(recycle);
 
-                // Save original swipeable to prevent cardSwipeListener
-                // (listView requires another cardSwipeListener)
-                boolean origianlSwipeable = card.isSwipeable();
-                card.setSwipeable(false);
+                //Save original swipeable to prevent cardSwipeListener (listView requires another cardSwipeListener)
+                boolean origianlSwipeable = mCard.isSwipeable();
+                mCard.setSwipeable(false);
 
-                cardView.setCard(card);
+                mCardView.setCard(mCard);
 
-                // Set originalValue
-                card.setSwipeable(origianlSwipeable);
+                //Set originalValue
+                mCard.setSwipeable(origianlSwipeable);
 
-                // If card has an expandable button override animation
-                if ((card.getCardHeader() != null
-                        && card.getCardHeader().isButtonExpandVisible())
-                        || card.getViewToClickToExpand() != null) {
-                    setupExpandCollapseListAnimation(cardView);
+                //If card has an expandable button override animation
+                if ((mCard.getCardHeader() != null && mCard.getCardHeader().isButtonExpandVisible()) || mCard.getViewToClickToExpand()!=null ){
+                    setupExpandCollapseListAnimation(mCardView);
                 }
 
-                // Setup swipeable animation
-                setupSwipeableAnimation(card, cardView);
+                //Setup swipeable animation
+                setupSwipeableAnimation(mCard, mCardView);
 
                 //setupMultiChoice
-                setupMultichoice(view, card, cardView, position);
+                setupMultichoice(view,mCard,mCardView,position);
             }
         }
 
         return view;
     }
 
-    static class ViewHolder {
-        CardView cardView;
-    }
 
 
     /**
      * Sets SwipeAnimation on List
      *
      * @param card {@link Card}
-     * @param cardView {@link CardView}
+     * @param cardView {@link com.android.cards.view.base.CardViewWrapper}
      */
-    protected void setupSwipeableAnimation(final Card card, CardView cardView) {
+    protected void setupSwipeableAnimation(final Card card, CardViewWrapper cardView) {
         HashMap<Integer, Card.OnLongCardClickListener> multipleOnLongClickListner =
                 card.getMultipleOnLongClickListener();
-        if (card.isSwipeable()) {
-            if (mOnTouchListener == null) {
+        if (card.isSwipeable()){
+            if (mOnTouchListener == null){
                 mOnTouchListener = new SwipeDismissListViewTouchListener(mCardListView, mCallback);
+
+                //Configure the default DismissableManager
+                if (mDismissable == null) mDismissable = new DefaultDismissableManager();
+                mDismissable.setAdapter(this);
+                mOnTouchListener.setDismissable(mDismissable);
+
                 // Setting this scroll listener is required to ensure that during
                 // ListView scrolling, we don't look for swipes.
-                if (mCardListView.getOnScrollListener() == null) {
+                if (mCardListView.getOnScrollListener() == null){
                     SwipeOnScrollListener scrollListener = new SwipeOnScrollListener();
                     scrollListener.setTouchListener(mOnTouchListener);
                     mCardListView.setOnScrollListener(scrollListener);
-                } else {
+                }else{
                     AbsListView.OnScrollListener onScrollListener=mCardListView.getOnScrollListener();
-                    if (onScrollListener instanceof SwipeOnScrollListener) {
+                    if (onScrollListener instanceof SwipeOnScrollListener)
                         ((SwipeOnScrollListener) onScrollListener).setTouchListener(mOnTouchListener);
-                    }
 
                 }
+
                 mCardListView.setOnTouchListener(mOnTouchListener);
             }
             cardView.setOnTouchListener(mOnTouchListener);
+
             // We may have partial onlongclicklistener. Restore onTouchListener for this views.
             setPartialOnTouchListeners(cardView, mOnTouchListener, multipleOnLongClickListner);
         } else {
@@ -229,7 +235,7 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
         }
     }
 
-    private void setPartialOnTouchListeners(CardView cardView,
+    private void setPartialOnTouchListeners(CardViewWrapper cardView,
             SwipeDismissListViewTouchListener onTouchListener,
             HashMap<Integer, Card.OnLongCardClickListener> multipleOnLongClickListner) {
         if (multipleOnLongClickListner != null && !multipleOnLongClickListner.isEmpty()) {
@@ -245,9 +251,9 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
     /**
      * Overrides the default collapse/expand animation in a List
      *
-     * @param cardView {@link CardView}
+     * @param cardView {@link com.android.cards.view.base.CardViewWrapper}
      */
-    protected void setupExpandCollapseListAnimation(CardView cardView) {
+    protected void setupExpandCollapseListAnimation(CardViewWrapper cardView) {
 
         if (cardView == null) return;
         cardView.setOnExpandListAnimatorListener(mCardListView);
@@ -263,7 +269,7 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
 
         @Override
         public boolean canDismiss(int position, Card card) {
-            return card.isSwipeable();
+            return mDismissable.isDismissable(position, card);
         }
 
         @Override
@@ -273,16 +279,36 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
             String[] itemIds=new String[reverseSortedPositions.length];
             int i=0;
 
+            // Keep track of the cards that will be removed
+            final ArrayList<Card> removedCards = new ArrayList<Card>();
+
             //Remove cards and notifyDataSetChanged
             for (int position : reverseSortedPositions) {
-                Card card = getItem(position);
-                itemPositions[i]=position;
-                itemIds[i]=card.getId();
-                i++;
 
-                remove(card);
-                if (card.getOnSwipeListener() != null){
+                Card card = null;
+                if (listView.getAdapter() != null && listView.getAdapter().getItem(position) instanceof Card)
+                    card = (Card) listView.getAdapter().getItem(position);
+                //Card card = getItem(position);
+
+                if (card != null) {
+                    itemPositions[i] = position;
+                    itemIds[i] = card.getId();
+                    i++;
+
+                    /*
+                    if (card.isExpanded()){
+                        if (card.getCardView()!=null && card.getCardView().getOnExpandListAnimatorListener()!=null){
+                            //There is a List Animator.
+                            card.getCardView().getOnExpandListAnimatorListener().onCollapseStart(card.getCardView(), card.getCardView().getInternalExpandLayout());
+                        }
+                    }*/
+                    removedCards.add(card);
+                    remove(card);
+                    if (card.getOnSwipeListener() != null) {
                         card.getOnSwipeListener().onSwipe(card);
+                    }
+                }else{
+                    Log.e(TAG,"Error on swipe action. Impossible to retrieve the card from position");
                 }
             }
             notifyDataSetChanged();
@@ -293,18 +319,41 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
                 //Show UndoBar
                 UndoCard itemUndo=new UndoCard(itemPositions,itemIds);
 
-                if (getContext()!=null){
-                    Resources res = getContext().getResources();
-                    if (res!=null){
-                        String messageUndoBar = res.getQuantityString(R.plurals.list_card_undo_items, reverseSortedPositions.length, reverseSortedPositions.length);
+                //MessageUndoBar
+                String messageUndoBar=null;
+                if (getUndoBarController().getUndoBarUIElements()!=null){
+                    messageUndoBar = getUndoBarController().getUndoBarUIElements().getMessageUndo(CardArrayAdapter.this,itemIds,itemPositions);
+                }
 
-                        mUndoBarController.showUndoBar(
-                                false,
-                                messageUndoBar,
-                                itemUndo);
+                //Default message if null
+                if (messageUndoBar == null) {
+                    if (getContext() != null) {
+                        Resources res = getContext().getResources();
+                        if (res != null) {
+                            messageUndoBar = res.getQuantityString(R.plurals.list_card_undo_items, reverseSortedPositions.length, reverseSortedPositions.length);
+                        }
                     }
                 }
 
+                mUndoBarController.showUndoBar(
+                        false,
+                        messageUndoBar,
+                        itemUndo,
+                        new UndoBarController.UndoBarHideListener() {
+                            @Override
+                            public void onUndoBarHide(boolean undoOccurred) {
+                                // Remove the items from mInternalObjects, if
+                                // the undo was not triggered, since they are
+                                // now permanently removed from the underlying Array.
+                                if (!undoOccurred) {
+                                    for (Card card : removedCards) {
+                                        if (card.getOnUndoHideSwipeListListener()!=null)
+                                            card.getOnUndoHideSwipeListListener().onUndoHideSwipe(card);
+                                        mInternalObjects.remove(card.getId());
+                                    }
+                                }
+                            }
+                        });
             }
         }
     };
@@ -374,13 +423,69 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
                 if (mUndoBarUIElements==null)
                     mUndoBarUIElements=new UndoBarController.DefaultUndoBarUIElements();
 
-                View undobar = ((Activity)mContext).findViewById(mUndoBarUIElements.getUndoBarId());
-                if (undobar != null) {
-                    mUndoBarController = new UndoBarController(undobar, this,mUndoBarUIElements);
+                if (mContext!=null && mContext instanceof Activity) {
+                    View undobar = ((Activity) mContext).findViewById(mUndoBarUIElements.getUndoBarId());
+                    if (undobar != null) {
+                        mUndoBarController = new UndoBarController(undobar, this, mUndoBarUIElements);
+                    }
+                }else{
+                    Log.e(TAG,"Undo Action requires a valid Activity context");
+                    throw new IllegalArgumentException("Undo Action requires a valid Activity context");
                 }
             }
         }else{
             mUndoBarController=null;
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    //  Override Array Manipulation Methods To Keep mInternalObjects in Sync
+    // ---------------------------------------------------------------------
+
+    // public void remove() intentionally omitted, since mInternalObjects needs
+    // to keep a reference so the remove can be undone, if necessary.
+
+    @Override
+    public void add(Card card) {
+        super.add(card);
+        if (mEnableUndo) {
+            mInternalObjects.put(card.getId(), card);
+        }
+    }
+
+    @Override
+    public void addAll(Collection<? extends Card> cardCollection) {
+        super.addAll(cardCollection);
+        if (mEnableUndo) {
+            for (Card card : cardCollection) {
+                mInternalObjects.put(card.getId(), card);
+            }
+        }
+    }
+
+    @Override
+    public void addAll(Card...cards) {
+        super.addAll(cards);
+        if (mEnableUndo) {
+            for (Card card : cards) {
+                mInternalObjects.put(card.getId(), card);
+            }
+        }
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+        if (mEnableUndo) {
+            mInternalObjects.clear();
+        }
+    }
+
+    @Override
+    public void insert(Card card, int index) {
+        super.insert(card, index);
+        if (mEnableUndo) {
+            mInternalObjects.put(card.getId(), card);
         }
     }
 
@@ -414,4 +519,13 @@ public class CardArrayAdapter extends BaseCardArrayAdapter implements UndoBarCon
     public UndoBarController getUndoBarController() {
         return mUndoBarController;
     }
+
+    /**
+     * Sets a custom DismissableManager
+     * @param dismissable
+     */
+    public void setDismissable(Dismissable dismissable) {
+        mDismissable = dismissable;
+    }
+
 }

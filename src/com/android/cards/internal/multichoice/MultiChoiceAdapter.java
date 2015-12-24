@@ -21,7 +21,8 @@ package com.android.cards.internal.multichoice;
 import android.view.ActionMode;
 
 import com.android.cards.internal.Card;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
+
 
 /**
  * A base interface for multi choice adapter
@@ -63,9 +64,7 @@ public interface MultiChoiceAdapter {
      * @param cardView
      * @param card
      */
-    void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked, CardView cardView, Card card);
-
-
+    void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked, CardViewWrapper cardView, Card card);
 
     // -------------------------------------------------------------
     // Default methods. You haven't to define it in your classes

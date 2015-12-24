@@ -33,7 +33,8 @@ import com.android.cards.internal.multichoice.MultiChoiceAdapter;
 import com.android.cards.internal.multichoice.MultiChoiceAdapterHelperBase;
 import com.android.cards.internal.multichoice.OptionMultiChoice;
 import com.android.cards.view.CardListView;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
+
 
 /**
  * @author Gabriele Mariotti (gabri.mariotti@gmail.com)
@@ -96,7 +97,7 @@ public abstract class CardArrayMultiChoiceAdapter extends CardArrayAdapter imple
      * @param position
      */
     @Override
-    protected void setupMultichoice(View view, Card mCard, CardView mCardView, long position) {
+    protected void setupMultichoice(View view, Card mCard, CardViewWrapper mCardView, long position) {
         super.setupMultichoice(view, mCard, mCardView, position);
         mHelper.setupMultichoice(view, mCard, mCardView, position);
     }

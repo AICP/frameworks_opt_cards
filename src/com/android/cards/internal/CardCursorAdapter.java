@@ -32,7 +32,8 @@ import java.util.List;
 import com.android.cards.R;
 import com.android.cards.internal.base.BaseCardCursorAdapter;
 import com.android.cards.view.CardListView;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
+
 
 /**
  * Cursor Adapter for {@link com.android.cards.internal.Card} model
@@ -57,31 +58,31 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
     protected HashMap<String /* id */,Card>  mInternalObjects;
 
 
+    /**
+     * All ids expanded
+     */
     protected final List<String> mExpandedIds;
 
     /**
      * Recycle
      */
-    private boolean recycle = false;
+    protected boolean recycle = false;
     // -------------------------------------------------------------
     // Constructors
     // -------------------------------------------------------------
 
     public CardCursorAdapter(Context context) {
-        super(context, null, false);
-        mContext= context;
+        super(context, null, 0);
         mExpandedIds = new ArrayList<String>();
     }
 
     protected CardCursorAdapter(Context context, Cursor c, boolean autoRequery) {
         super(context, c, autoRequery);
-        mContext= context;
         mExpandedIds = new ArrayList<String>();
     }
 
     protected CardCursorAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
-        mContext= context;
         mExpandedIds = new ArrayList<String>();
     }
 
@@ -111,12 +112,12 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
 
-        CardView mCardView;
+        CardViewWrapper mCardView;
         Card mCard;
 
         mCard = (Card) getCardFromCursor(cursor);
         if (mCard != null) {
-            mCardView = (CardView) view.findViewById(R.id.list_cardId);
+            mCardView = (CardViewWrapper) view.findViewById(R.id.list_cardId);
             if (mCardView != null) {
                 //It is important to set recycle value for inner layout elements
                 mCardView.setForceReplaceInnerLayout(Card.equalsInnerLayout(mCardView.getCard(),mCard));
@@ -145,6 +146,8 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
                 //Setup swipeable animation
                 setupSwipeableAnimation(mCard, mCardView);
 
+                //setupMultiChoice
+                setupMultichoice(view,mCard,mCardView,cursor.getPosition());
             }
         }
     }
@@ -156,7 +159,7 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
      * @param card {@link com.android.cards.internal.Card}
      * @param cardView {@link com.android.cards.view.CardView}
      */
-    protected void setupSwipeableAnimation(final Card card, CardView cardView) {
+    protected void setupSwipeableAnimation(final Card card, CardViewWrapper cardView) {
 
         cardView.setOnTouchListener(null);
     }
@@ -166,7 +169,7 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
      *
      * @param cardView {@link com.android.cards.view.CardView}
      */
-    protected void setupExpandCollapseListAnimation(CardView cardView) {
+    protected void setupExpandCollapseListAnimation(CardViewWrapper cardView) {
 
         if (cardView == null) return;
         cardView.setOnExpandListAnimatorListener(mCardListView);
@@ -236,7 +239,7 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
      * @param viewCard
      * @return
      */
-    public boolean onExpandStart(CardView viewCard) {
+    public boolean onExpandStart(CardViewWrapper viewCard) {
         Card card = viewCard.getCard();
         if (card!=null){
             String itemId = card.getId();
@@ -253,7 +256,7 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
      * @param viewCard
      * @return
      */
-    public boolean onCollapseStart(CardView viewCard) {
+    public boolean onCollapseStart(CardViewWrapper viewCard) {
         Card card = viewCard.getCard();
         if (card!=null){
             String itemId = card.getId();
@@ -269,7 +272,7 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
      *
      * @param viewCard
      */
-    public void onExpandEnd(CardView viewCard) {
+    public void onExpandEnd(CardViewWrapper viewCard) {
         Card card = viewCard.getCard();
         if (card!=null){
             setExpanded(card);
@@ -281,7 +284,7 @@ public abstract class CardCursorAdapter extends BaseCardCursorAdapter  {
      *
      * @param viewCard
      */
-    public void onCollapseEnd(CardView viewCard) {
+    public void onCollapseEnd(CardViewWrapper viewCard) {
         Card card = viewCard.getCard();
         if (card!=null){
             setCollapsed(card);

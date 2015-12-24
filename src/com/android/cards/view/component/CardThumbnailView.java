@@ -174,13 +174,7 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         //Get ImageVIew
         mImageView= (ImageView) findViewById(R.id.card_thumbnail_image);
 
-    }
 
-    private void initLruCache() {
-        mMemoryCache = CacheUtil.getMemoryCache();
-        if (mMemoryCache != null) {
-            return;
-        }
         // Get max available VM memory, exceeding this amount will throw an
         // OutOfMemory exception. Stored in kilobytes as LruCache takes an
         // int in its constructor.
@@ -189,20 +183,23 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         // Use 1/8th of the available memory for this memory cache.
         final int cacheSize = maxMemory / 8;
 
-        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+        mMemoryCache = CacheUtil.getMemoryCache();
+        if (mMemoryCache==null){
+            mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
 
-            @Override
-            protected int sizeOf(String key, Bitmap bitmap) {
-                // The cache size will be measured in kilobytes rather than
-                // number of items.
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB_MR1) {
-                    return bitmap.getByteCount() / 1024;
-                } else {
-                    return bitmap.getRowBytes() * bitmap.getHeight() / 1024;
+                @Override
+                protected int sizeOf(String key, Bitmap bitmap) {
+                    // The cache size will be measured in kilobytes rather than
+                    // number of items.
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB_MR1) {
+                        return bitmap.getByteCount() / 1024;
+                    } else {
+                        return bitmap.getRowBytes() * bitmap.getHeight() / 1024;
+                    }
                 }
-            }
-        };
-        CacheUtil.putMemoryCache(mMemoryCache);
+            };
+            CacheUtil.putMemoryCache(mMemoryCache);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -245,15 +242,13 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
             mCardThumbnail.setupInnerViewElements((ViewGroup)mInternalOuterView,mImageView);
 
         //Load bitmap
-        if (!mCardThumbnail.isExternalUsage()) {
-            initLruCache();
-            if (mCardThumbnail.getCustomSource() != null) {
+        if (!mCardThumbnail.isExternalUsage()){
+            if (mCardThumbnail.getCustomSource() != null)
                 loadBitmap(mCardThumbnail.getCustomSource(), mImageView);
-            } else if (mCardThumbnail.getDrawableResource() > 0) {
+            else if(mCardThumbnail.getDrawableResource()>0)
                 loadBitmap(mCardThumbnail.getDrawableResource(), mImageView);
-            } else {
+            else
                 loadBitmap(mCardThumbnail.getUrlResource(), mImageView);
-            }
         }
     }
 
@@ -436,24 +431,19 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         return true;
     }
 
-    public static boolean cancelPotentialWork(
-            CardThumbnail.CustomSource customSource, ImageView imageView) {
+    public static boolean cancelPotentialWork(CardThumbnail.CustomSource customSource, ImageView imageView) {
+        final BitmapWorkerCustomSourceTask bitmapWorkerTask = getBitmapWorkerCustomSourceTask(imageView);
 
-        final BitmapWorkerCustomSourceTask bitmapWorkerTask =
-                getBitmapWorkerCustomSourceTask(imageView);
-
-        if (bitmapWorkerTask != null) {
-
-            final CardThumbnail.CustomSource bitmapWorkerTaskCustomSource =
-                    bitmapWorkerTask.customSource;
-
-            if (bitmapWorkerTaskCustomSource != null
-                    && !bitmapWorkerTaskCustomSource.getTag().equals(customSource.getTag())) {
-                // Cancel previous task
-                bitmapWorkerTask.cancel(true);
-            } else {
-                // The same work is already in progress
-                return false;
+        if (bitmapWorkerTask != null && bitmapWorkerTask.customSource != null) {
+            final CardThumbnail.CustomSource bitmapWorkerTaskCustomSource = bitmapWorkerTask.customSource;
+            if (bitmapWorkerTaskCustomSource.getTag() != null) {
+                if (!bitmapWorkerTaskCustomSource.getTag().equals(customSource.getTag())) {
+                    // Cancel previous task
+                    bitmapWorkerTask.cancel(true);
+                } else {
+                    // The same work is already in progress
+                    return false;
+                }
             }
         }
         // No task associated with the ImageView, or an existing task was cancelled

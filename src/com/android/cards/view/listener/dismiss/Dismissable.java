@@ -16,37 +16,44 @@
  *  *****************************************************************************
  */
 
-package com.android.cards.internal.base;
+package com.android.cards.view.listener.dismiss;
 
-import android.content.Context;
-import android.view.View;
-import android.view.ViewGroup;
+import android.widget.Adapter;
+
+import com.android.cards.internal.Card;
 
 /**
- * Card Interface
- *
+ * An interface to specify if items can or cannot be dismissed and the SwipeDirection
  * @author Gabriele Mariotti (gabri.mariotti@gmail.com)
  */
-public interface CardUIInterface {
+public interface Dismissable {
 
     /**
-     * Implement this method to draw or inflate the Layout View of a Card or a Component Card.
-     * This method will be called runtime by UI components.
-     *
-     * @param context  context
-     * @param parent parent view
-     * @return   layout view
+     * Returns whether the item for given id and position can be dismissed.
+     * @param position the position of the item.
+     * @param card card
+     * @return true if the item can be dismissed, false otherwise.
      */
-    public View getInnerView(Context context,ViewGroup parent);
+    boolean isDismissable(int position, Card card);
+
+    SwipeDirection getSwipeDirectionAllowed();
+
+    void setAdapter(Adapter adapter);
 
 
-    /**
-     * Implement this method to setup all view elements
-     *
-     * @param parent  parent view
-     * @param view  view
-     */
-    public void setupInnerViewElements(ViewGroup parent,View view);
+    public enum SwipeDirection {
+        BOTH(0),
+        LEFT(1),
+        RIGHT(2);
 
+        private final int mValue;
 
+        private SwipeDirection(int value) {
+            mValue = value;
+        }
+
+        public int getValue() {
+            return mValue;
+        }
+    }
 }

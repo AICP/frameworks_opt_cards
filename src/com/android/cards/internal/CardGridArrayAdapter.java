@@ -29,7 +29,7 @@ import java.util.List;
 import com.android.cards.R;
 import com.android.cards.internal.base.BaseCardArrayAdapter;
 import com.android.cards.view.CardGridView;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
 import com.android.cards.view.listener.SwipeDismissListViewTouchListener;
 
 /**
@@ -86,11 +86,6 @@ public class CardGridArrayAdapter extends BaseCardArrayAdapter {
      */
     protected SwipeDismissListViewTouchListener mOnTouchListener;
 
-    /**
-     * List of cards represented in the ListView.
-     */
-    private List<Card> cards;
-
 
     // -------------------------------------------------------------
     // Constructors
@@ -104,7 +99,6 @@ public class CardGridArrayAdapter extends BaseCardArrayAdapter {
      */
     public CardGridArrayAdapter(Context context, List<Card> cards) {
         super(context, cards);
-        this.cards = cards;
     }
 
     // -------------------------------------------------------------
@@ -115,13 +109,13 @@ public class CardGridArrayAdapter extends BaseCardArrayAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         View view = convertView;
-        CardView mCardView;
+        CardViewWrapper mCardView;
         Card mCard;
 
         LayoutInflater mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         //Retrieve card from items
-        mCard = getItem(position);
+        mCard = (Card) getItem(position);
         if (mCard != null) {
 
             int layout = mRowLayoutId;
@@ -136,7 +130,7 @@ public class CardGridArrayAdapter extends BaseCardArrayAdapter {
             }
 
             //Setup card
-            mCardView = (CardView) view.findViewById(R.id.list_cardId);
+            mCardView = (CardViewWrapper) view.findViewById(R.id.list_cardId);
             if (mCardView != null) {
                 //It is important to set recycle value for inner layout elements
                 mCardView.setForceReplaceInnerLayout(Card.equalsInnerLayout(mCardView.getCard(),mCard));
@@ -171,23 +165,13 @@ public class CardGridArrayAdapter extends BaseCardArrayAdapter {
         return view;
     }
 
-    @Override
-    public int getCount() {
-        return cards.size();
-    }
-
-    @Override
-    public Card getItem(int pos){
-        return cards.get(pos);
-    }
-
     /**
      * Removes SwipeAnimation on Grid
      *
      * @param card     {@link Card}
-     * @param cardView {@link CardView}
+     * @param cardView {@link com.android.cards.view.base.CardViewWrapper}
      */
-    protected void setupSwipeableAnimation(final Card card, CardView cardView) {
+    protected void setupSwipeableAnimation(final Card card, CardViewWrapper cardView) {
 
         cardView.setOnTouchListener(null);
     }
@@ -197,7 +181,7 @@ public class CardGridArrayAdapter extends BaseCardArrayAdapter {
      *
      * @param cardView {@link com.android.cards.view.CardView}
      */
-    protected void setupExpandCollapseListAnimation(CardView cardView) {
+    protected void setupExpandCollapseListAnimation(CardViewWrapper cardView) {
 
         if (cardView == null) return;
         cardView.setOnExpandListAnimatorListener(mCardGridView);

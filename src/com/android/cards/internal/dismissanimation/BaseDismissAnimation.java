@@ -39,7 +39,7 @@ import com.android.cards.internal.Card;
 import com.android.cards.internal.CardArrayAdapter;
 import com.android.cards.internal.base.BaseCardArrayAdapter;
 import com.android.cards.view.CardListView;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
 import com.android.cards.view.listener.SwipeDismissListViewTouchListener;
 
 /**
@@ -114,9 +114,9 @@ public abstract class BaseDismissAnimation {
         prepareAnimation();
 
         final List<Integer> positionsCopy = new ArrayList<Integer>(positions);
-        List<CardView> views = getVisibleViewsForPositions(positionsCopy);
+        List<CardViewWrapper> views = getVisibleViewsForPositions(positionsCopy);
 
-        for (CardView cardView:views){
+        for (CardViewWrapper cardView:views){
             dismissiCardWithAnimation(cardView);
         }
     }
@@ -133,9 +133,9 @@ public abstract class BaseDismissAnimation {
         prepareAnimation();
 
         final List<Card> cardsCopy = new ArrayList<Card>(cards);
-        List<CardView> views = getVisibleViewsForCards(cardsCopy);
+        List<CardViewWrapper> views = getVisibleViewsForCards(cardsCopy);
 
-        for (CardView cardView:views){
+        for (CardViewWrapper cardView:views){
             dismissiCardWithAnimation(cardView);
         }
     }
@@ -151,7 +151,7 @@ public abstract class BaseDismissAnimation {
     }
 
 
-    public abstract void animate(Card card, CardView cardView);//, Card.OnDismissAnimationListener onDismissAnimationListener);
+    public abstract void animate(Card card, CardViewWrapper cardView);//, Card.OnDismissAnimationListener onDismissAnimationListener);
 
 
     /**
@@ -177,12 +177,12 @@ public abstract class BaseDismissAnimation {
      * @param positions
      * @return
      */
-    private List<CardView> getVisibleViewsForPositions(final Collection<Integer> positions) {
-        List<CardView> views = new ArrayList<CardView>();
+    private List<CardViewWrapper> getVisibleViewsForPositions(final Collection<Integer> positions) {
+        List<CardViewWrapper> views = new ArrayList<CardViewWrapper>();
         for (int i = 0; i < mCardListView.getChildCount(); i++) {
             View child = mCardListView.getChildAt(i);
             if (positions.contains(mCardListView.getPositionForView(child))) {
-                views.add((CardView) child);
+                views.add((CardViewWrapper) child);
             }
         }
         return views;
@@ -194,8 +194,8 @@ public abstract class BaseDismissAnimation {
      * @param cardsCopy
      * @return
      */
-    private List<CardView> getVisibleViewsForCards(List<Card> cardsCopy) {
-        List<CardView> originalViews = new ArrayList<CardView>();
+    private List<CardViewWrapper> getVisibleViewsForCards(List<Card> cardsCopy) {
+        List<CardViewWrapper> originalViews = new ArrayList<CardViewWrapper>();
         for (Card card:cardsCopy){
             originalViews.add(card.getCardView());
         }
@@ -210,9 +210,9 @@ public abstract class BaseDismissAnimation {
         return originalViews;
     }
 
-    private void dismissiCardWithAnimation(final CardView cardView) {
+    private void dismissiCardWithAnimation(final CardViewWrapper cardView) {
         ++mDismissAnimationRefCount;
-        int mDownPosition = mCardListView.getPositionForView(cardView);
+        int mDownPosition = mCardListView.getPositionForView((View)cardView);
 
         animate(cardView.getCard(),cardView);
     }
@@ -223,7 +223,7 @@ public abstract class BaseDismissAnimation {
         // all dismissed list item animations have completed. This triggers layout on each animation
         // frame; in the future we may want to do something smarter and more performant.
 
-        final int dismissPosition= mBaseAdapter.getPosition(((CardView) dismissView).getCard());
+        final int dismissPosition= mBaseAdapter.getPosition(((CardViewWrapper) dismissView).getCard());
 
         final ViewGroup.LayoutParams lp = dismissView.getLayoutParams();
         final int originalHeight = dismissView.getHeight();

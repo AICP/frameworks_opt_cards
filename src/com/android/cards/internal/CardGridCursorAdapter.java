@@ -30,7 +30,8 @@ import java.util.HashMap;
 import com.android.cards.R;
 import com.android.cards.internal.base.BaseCardCursorAdapter;
 import com.android.cards.view.CardGridView;
-import com.android.cards.view.CardView;
+import com.android.cards.view.base.CardViewWrapper;
+
 
 /**
  * Cursor Adapter for {@link Card} model
@@ -63,18 +64,15 @@ public abstract class CardGridCursorAdapter extends BaseCardCursorAdapter  {
     // -------------------------------------------------------------
 
     public CardGridCursorAdapter(Context context) {
-        super(context, null, false);
-        mContext= context;
+        super(context, null, 0);
     }
 
     protected CardGridCursorAdapter(Context context, Cursor c, boolean autoRequery) {
         super(context, c, autoRequery);
-        mContext= context;
     }
 
     protected CardGridCursorAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
-        mContext= context;
     }
 
     // -------------------------------------------------------------
@@ -103,12 +101,12 @@ public abstract class CardGridCursorAdapter extends BaseCardCursorAdapter  {
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
 
-        CardView mCardView;
+        CardViewWrapper mCardView;
         Card mCard;
 
         mCard = (Card) getCardFromCursor(cursor);
         if (mCard != null) {
-            mCardView = (CardView) view.findViewById(R.id.list_cardId);
+            mCardView = (CardViewWrapper) view.findViewById(R.id.list_cardId);
             if (mCardView != null) {
                 //It is important to set recycle value for inner layout elements
                 mCardView.setForceReplaceInnerLayout(Card.equalsInnerLayout(mCardView.getCard(),mCard));
@@ -148,18 +146,9 @@ public abstract class CardGridCursorAdapter extends BaseCardCursorAdapter  {
      * @param card {@link Card}
      * @param cardView {@link com.android.cards.view.CardView}
      */
-    protected void setupSwipeableAnimation(final Card card, CardView cardView) {
-        cardView.setOnTouchListener(null);
-    }
+    protected void setupSwipeableAnimation(final Card card, CardViewWrapper cardView) {
 
-    /**
-     * Overrides the default collapse/expand animation in a List
-     *
-     * @param cardView {@link com.android.cards.view.CardView}
-     */
-    protected void setupExpandCollapseListAnimation(CardView cardView) {
-        if (cardView == null) return;
-        cardView.setOnExpandListAnimatorListener(mCardGridView);
+        cardView.setOnTouchListener(null);
     }
 
 

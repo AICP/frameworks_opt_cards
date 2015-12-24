@@ -20,10 +20,12 @@ package com.android.cards.internal.base;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.view.View;
 import android.widget.CursorAdapter;
 
 import com.android.cards.R;
 import com.android.cards.internal.Card;
+import com.android.cards.view.base.CardViewWrapper;
 
 /**
  * Base Cursor Adapter
@@ -91,6 +93,15 @@ public abstract class BaseCardCursorAdapter extends CursorAdapter {
             return true;
         else
             return false;
+    }
+
+    /**
+     * This method is used in with multichoice
+     * @param mCard
+     * @param mCardView
+     */
+    protected void setupMultichoice(View view,Card mCard,CardViewWrapper mCardView,long position){
+        //empty
     }
 
     @Override
